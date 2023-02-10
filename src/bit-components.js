@@ -150,7 +150,12 @@ MediaPDF.map = new Map();
 export const MediaVideo = defineComponent({
   autoPlay: Types.ui8
 });
-export const AnimationMixer = defineComponent();
+export const MixerAnimatable = defineComponent({});
+// Map<EntityId, {mixer: AnimationMixer: animations: Array<AnimationClip>}>
+export const MixerAnimatableData = new Map();
+export const LoopAnimation = defineComponent({});
+// Map<EntityId, Array<AnimationAction>>
+export const LoopAnimationData = new Map();
 export const NetworkedVideo = defineComponent({
   time: Types.f32,
   flags: Types.ui8

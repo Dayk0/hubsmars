@@ -5,6 +5,8 @@ import { GLTFModel, MaterialTag } from "../bit-components";
 import { addMaterialComponent, addObject3DComponent, gltfInflatorExists, gltfInflators } from "../utils/jsx-entity";
 import { mapMaterials } from "../utils/material-utils";
 import { EntityID } from "../utils/networking-types";
+import { inflateMixerAnimatable } from "./mixer-animatable";
+import { inflateLoopAnimation } from "./loop-animation";
 
 function camelCase(s: string) {
   return s.replace(/-(\w)/g, (_, m) => m.toUpperCase());
@@ -139,6 +141,20 @@ export function inflateModel(world: HubsWorld, rootEid: number, { model }: Model
     }
   });
 
+  // TODO: Not sure if here is the best place and
+  //       this is the best way to inflate animations.
+  //       We may need to revisit.
+  if (model.animations !== undefined && model.animations.length > 0) {
+    inflateMixerAnimatable(world, rootEid, {
+      animations: model.animations
+    });
+    inflateLoopAnimation(world, rootEid, {
+      activeClipIndex: 0,
+      paused: false,
+      startOffset: 0,
+      timeScale: 1.0
+    });
+  }
+
   addComponent(world, GLTFModel, rootEid);
-  // TODO Animation Mixer
 }

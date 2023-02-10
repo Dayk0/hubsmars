@@ -13,7 +13,6 @@ import {
   HoldableButton,
   HoverButton,
   MakeKinematicOnRelease,
-  AnimationMixer,
   Networked,
   NetworkedTransform,
   Object3DTag,
@@ -49,6 +48,8 @@ import { inflatePDFLoader, PDFLoaderParams } from "../inflators/pdf-loader";
 import { inflateVideoLoader, VideoLoaderParams } from "../inflators/video-loader";
 import { inflateImageLoader, ImageLoaderParams } from "../inflators/image-loader";
 import { inflateModel, ModelParams } from "../inflators/model";
+import { inflateMixerAnimatable, MixerAnimatableParams } from "../inflators/mixer-animatable";
+import { inflateLoopAnimation, LoopAnimationParams } from "../inflators/loop-animation";
 import { inflateSlice9 } from "../inflators/slice9";
 import { inflateText } from "../inflators/text";
 import {
@@ -319,8 +320,9 @@ export interface JSXComponentData extends ComponentData {
     captureDurLblRef: Ref;
     sndToggleRef: Ref;
   };
-  animationMixer?: any;
   mediaLoader?: MediaLoaderParams;
+  mixerAnimatable?: MixerAnimatableParams;
+  loopAnimation?: LoopAnimationParams;
   sceneRoot?: boolean;
   sceneLoader?: { src: string };
   mediaFrame?: any;
@@ -404,7 +406,6 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   objectMenu: createDefaultInflator(ObjectMenu),
   pdfMenu: createDefaultInflator(PDFMenu),
   cameraTool: createDefaultInflator(CameraTool, { captureDurIdx: 1 }),
-  animationMixer: createDefaultInflator(AnimationMixer),
   networkedVideo: createDefaultInflator(NetworkedVideo),
   videoMenu: createDefaultInflator(VideoMenu),
   videoMenuItem: createDefaultInflator(VideoMenuItem),
@@ -414,6 +415,8 @@ const jsxInflators: Required<{ [K in keyof JSXComponentData]: InflatorFn }> = {
   waypointPreview: createDefaultInflator(WaypointPreview),
   pdf: inflatePDF,
   mediaLoader: inflateMediaLoader,
+  mixerAnimatable: inflateMixerAnimatable,
+  loopAnimation: inflateLoopAnimation,
 
   // inflators that create Object3Ds
   mediaFrame: inflateMediaFrame,

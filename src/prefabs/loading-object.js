@@ -2,7 +2,7 @@
 import { createElementEntity } from "../utils/jsx-entity";
 import { loadModel } from "../components/gltf-model-plus";
 import loadingObjectSrc from "../assets/models/LoadingObject_Atom.glb";
-import { disposeNode } from "../utils/three-utils";
+import { cloneObject3D, disposeNode } from "../utils/three-utils";
 
 // TODO We should have an explicit "preload assets" step
 let loadingObject = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
@@ -12,5 +12,15 @@ loadModel(loadingObjectSrc, null, true).then(gltf => {
 });
 
 export function LoadingObject() {
-  return <entity name="Loading Object" object3D={loadingObject.clone()} />;
+  const clonedObject = cloneObject3D(loadingObject);
+  return (
+    <entity
+	name="Loading Object"
+	object3D={clonedObject}
+	mixerAnimatable={{
+          animations: clonedObject.animations
+	}}
+	loopAnimation={{}}
+    />
+  );
 }
