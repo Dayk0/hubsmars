@@ -10,6 +10,10 @@ import { isIOS as detectIOS } from "./is-mobile";
 import Linkify from "linkify-it";
 import tlds from "tlds";
 import { mediaTypeFor } from "./media-type";
+import { buildAbsoluteURL } from "url-toolkit";
+import HLS from "hls.js";
+import configs from "../utils/configs";
+import qsTruthy from "../utils/qs_truthy";
 
 import anime from "animejs";
 
@@ -654,4 +658,47 @@ export async function resolveMediaInfo(urlString) {
     mediaType,
     thumbnail
   };
+}
+
+export function createHLSPlayer(url, videoEl, failLoad) {
+  const corsProxyPrefix = `https://${configs.CORS_PROXY_SERVER}/`;
+  const baseUrl = url.startsWith(corsProxyPrefix) ? url.substring(corsProxyPrefix.length) : url;
+  const hls = new HLS({
+    debug: qsTruthy("hlsDebug"),
+    xhrSetup: (xhr, u) => {
+      if (u.startsWith(corsProxyPrefix)) {
+        u = u.substring(corsProxyPrefix.length);
+      }
+
+      // HACK HLS.js resolves relative urls internally, but our CORS proxying screws it up. Resolve relative to the original unproxied url.
+      // TODO extend HLS.js to allow overriding of its internal resolving instead
+      if (!u.startsWith("http")) {
+        u = buildAbsoluteURL(baseUrl, u.startsWith("/") ? u : `/${u}`);
+      }
+
+      xhr.open("GET", proxiedUrlFor(u), true);
+    }
+  });
+
+  hls.loadSource(url);
+  hls.attachMedia(videoEl);
+
+  hls.on(HLS.Events.ERROR, function (event, data) {
+    if (data.fatal) {
+      switch (data.type) {
+        case HLS.ErrorTypes.NETWORK_ERROR:
+          // try to recover network error
+          hls.startLoad();
+          break;
+        case HLS.ErrorTypes.MEDIA_ERROR:
+          hls.recoverMediaError();
+          break;
+        default:
+          failLoad(event);
+          return;
+      }
+    }
+  });
+
+  return hls;
 }
