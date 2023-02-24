@@ -1,4 +1,4 @@
-import { addComponent, addEntity, defineQuery, enterQuery, exitQuery, hasComponent, removeComponent } from "bitecs";
+import { addComponent, addEntity, defineQuery, enterQuery, hasComponent, removeComponent } from "bitecs";
 import {
   PositionalAudio,
   Audio as StereoAudio,
@@ -7,11 +7,12 @@ import {
   AudioListener as ThreeAudioListener
 } from "three";
 import { HubsWorld } from "../app";
-import { AudioEmitter, AudioSettingsChanged, MediaVideo, NetworkedVideo, Owned } from "../bit-components";
+import { AudioEmitter, AudioSettingsChanged, MediaVideo, Networked, NetworkedVideo, Owned } from "../bit-components";
 import { AudioType, SourceType } from "../components/audio-params";
 import { AudioSystem } from "../systems/audio-system";
 import { applySettings, getCurrentAudioSettings, updateAudioSettings } from "../update-audio-settings";
 import { addObject3DComponent, swapObject3DComponent } from "../utils/jsx-entity";
+import { takeSoftOwnership } from "../utils/take-soft-ownership";
 
 type AudioObject3D = StereoAudio | PositionalAudio;
 type AudioConstructor<T> = new (listener: ThreeAudioListener) => T;
@@ -100,7 +101,8 @@ function audioEmitterSystem(world: HubsWorld, audioSystem: AudioSystem) {
 }
 
 const OUT_OF_SYNC_SEC = 5;
-const networkedVideoQuery = defineQuery([NetworkedVideo]);
+const networkedVideoQuery = defineQuery([Networked, NetworkedVideo]);
+const networkedVideoEntryQuery = enterQuery(networkedVideoQuery);
 const mediaVideoQuery = defineQuery([MediaVideo]);
 const mediaVideoEnterQuery = enterQuery(mediaVideoQuery);
 export function videoSystem(world: HubsWorld, audioSystem: AudioSystem) {
@@ -120,6 +122,12 @@ export function videoSystem(world: HubsWorld, audioSystem: AudioSystem) {
   });
 
   audioEmitterSystem(world, audioSystem);
+
+  networkedVideoEntryQuery(world).forEach(function (eid) {
+    if (Networked.owner[eid] === APP.getSid("reticulum")) {
+      takeSoftOwnership(world, eid);
+    }
+  });
 
   networkedVideoQuery(world).forEach(function (eid) {
     const video = (world.eid2obj.get(eid) as any).material.map.image as HTMLVideoElement;
